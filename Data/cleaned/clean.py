@@ -1,5 +1,6 @@
 
 import pandas as pd
+import json 
 
 df_train = pd.read_csv("../original/data_train.csv")
 df_test = pd.read_csv("../original/data_test.csv")
@@ -26,11 +27,25 @@ for col in df_combined.columns:
 df_combined['income'].replace({'>50K.': '>50K', '<=50K.': '<=50K'}, inplace=True)
 
 # Factorize categorical column values into their alphabetical index
-mappings = {}
-for col in categorical_columns:
-    df_combined[col] = df_combined[col].astype('category')
-    mappings[col] = dict(enumerate(df_combined[col].cat.categories))
-    df_combined[col] = pd.factorize(df_combined[col])[0]
+
+
+with open("mapping.txt", "a") as file_handle:
+    for col in categorical_columns:
+        df_combined[col] = df_combined[col].astype('category')
+        df_combined[col], uniques = pd.factorize(df_combined[col], sort=True)
+        
+        mapping_values = uniques.categories.tolist()
+        mapping_codes = uniques.codes
+
+        file_handle.write("\n\n" + col + " : \n \n")
+
+        mappings = {k: str(v) for k,v in zip(mapping_values,mapping_codes)}
+        file_handle.write(json.dumps(mappings))
+
+
+
+
+
 
 # Split the combined dataframe back into train and test set again
 nb_rows_train = len(df_train)
